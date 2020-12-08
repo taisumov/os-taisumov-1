@@ -163,7 +163,55 @@ int main() {
 				cout << endl << "Название указанного диска: " << lpVolumeNameBuffer << endl;
 				cout << "Cерийный номер диска:      " << hex << lpVolumeSerialNumber << endl;
 				cout << "Максимальная длина файла:  " << dec << lpMaximumComponentLength << endl;
-				cout << "Опции файловой системой:   " << oct << lpFileSystemFlags << endl;
+				cout << "Опции файловой системой:   " << endl;
+
+				//Расшифровка lpFileSystemFlags
+
+				if (lpFileSystemFlags & FILE_CASE_PRESERVED_NAMES)
+					cout << " - Указанный том поддерживает сохраненный регистр имен файлов, когда он помещает имя на диск." << endl;
+				if (lpFileSystemFlags & FILE_CASE_SENSITIVE_SEARCH)
+					cout << " - Указанный том поддерживает имена файлов с учетом регистра." << endl;
+				if (lpFileSystemFlags & FILE_DAX_VOLUME)
+					cout << " - Указанный том является томом прямого доступа (DAX)." << endl;
+				if (lpFileSystemFlags & FILE_FILE_COMPRESSION)
+					cout << " - Указанный том поддерживает сжатие файлов." << endl;
+				if (lpFileSystemFlags & FILE_NAMED_STREAMS)
+					cout << " - Указанный том поддерживает именованные потоки." << endl;
+				if (lpFileSystemFlags & FILE_PERSISTENT_ACLS)
+					cout << " - Указанный том сохраняет и применяет списки управления доступом (ACL)." << endl;
+				if (lpFileSystemFlags & FILE_READ_ONLY_VOLUME)
+					cout << " - Указанный том доступен только для чтения." << endl;
+				if (lpFileSystemFlags & FILE_SEQUENTIAL_WRITE_ONCE)
+					cout << " - Указанный том поддерживает одну последовательную запись." << endl;
+				if (lpFileSystemFlags & FILE_SUPPORTS_ENCRYPTION)
+					cout << " - Указанный том поддерживает зашифрованную файловую систему (EFS)." << endl;
+				if (lpFileSystemFlags & FILE_SUPPORTS_EXTENDED_ATTRIBUTES)
+					cout << " - Указанный том поддерживает расширенные атрибуты." << endl;
+				if (lpFileSystemFlags & FILE_SUPPORTS_HARD_LINKS)
+					cout << " - Указанный том поддерживает жесткие ссылки." << endl;
+				if (lpFileSystemFlags & FILE_SUPPORTS_OBJECT_IDS)
+					cout << " - Указанный том поддерживает идентификаторы объектов." << endl;
+				if (lpFileSystemFlags & FILE_SUPPORTS_OPEN_BY_FILE_ID)
+					cout << " - Файловая система поддерживает открытие по FileID." << endl;
+				if (lpFileSystemFlags & FILE_SUPPORTS_REPARSE_POINTS)
+					cout << " - Указанный том поддерживает точки повторного разбора." << endl;
+				if (lpFileSystemFlags & FILE_SUPPORTS_SPARSE_FILES)
+					cout << " - Указанный том поддерживает разреженные файлы." << endl;
+				if (lpFileSystemFlags & FILE_SUPPORTS_TRANSACTIONS)
+					cout << " - Указанный том поддерживает транзакции." << endl;
+				if (lpFileSystemFlags & FILE_SUPPORTS_USN_JOURNAL)
+					cout << " - Указанный том поддерживает журналы обновления порядковых номеров (USN)." << endl;
+				if (lpFileSystemFlags & FILE_UNICODE_ON_DISK)
+					cout << " - Указанный том поддерживает Unicode в именах файлов по мере их появления на диске." << endl;
+				if (lpFileSystemFlags & FILE_VOLUME_IS_COMPRESSED)
+					cout << " - Указанный том является сжатым томом." << endl;
+				if (lpFileSystemFlags & FILE_VOLUME_QUOTAS)
+					cout << " - Указанный том поддерживает дисковые квоты." << endl;
+				if (lpFileSystemFlags & FILE_SUPPORTS_BLOCK_REFCOUNTING)
+					cout << " - Указанный том поддерживает совместное использование логических кластеров между файлами на одном томе." << endl;
+
+				//Конец расшифровка lpFileSystemFlags
+
 				cout << "Имя файловой системы:      " << lpFileSystemNameBuffer << endl;
 			}
 
@@ -483,24 +531,59 @@ int main() {
 				system("pause");
 				break;
 			case 3:
-				cout << "Введите имя файла (пример: c:\\folder\\text.pdf): ";
-				cin >> disk_name;
 
 				//GetFileInformationByHandle
 
-				fileLPC = disk_name.c_str();
-				fileT = CreateFileA(fileLPC, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
-					nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
-				if (GetFileInformationByHandle(fileT, &lpFileInformation)) {
-					cout << "Информация о файле по дескриптору: " << hex
-						<< lpFileInformation.dwVolumeSerialNumber << endl;
-				}
+				long handleInfo, FileAttributes;
+				BY_HANDLE_FILE_INFORMATION infoFile;
+				HANDLE handleFile;
+
+				cout << "Введите имя файла (пример: c:\\folder\\text.pdf): ";
+				cin >> disk_name;
+
+				handleFile = CreateFileA((LPCSTR)disk_name.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+				handleInfo = GetFileInformationByHandle(handleFile, &infoFile);
+				if (!handleInfo)
+					cout << " Произошла ошибка. Код ошибки: " << GetLastError() << endl;
 				else {
-					cout << "Ошибка! Не удалось получить информацию о файле. Код ошибки: " << GetLastError() << endl;
+					FileAttributes = infoFile.dwFileAttributes;
+					if (FileAttributes == -1)
+						cout << " Файл " << disk_name << " не найден." << endl;
+					else {
+
+						cout << "Информация о файле по дескриптору:" << endl;
+
+						if (FileAttributes & FILE_ATTRIBUTE_ARCHIVE)
+							cout << " Файл " << disk_name << " - архивный." << endl;
+						if (FileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+							cout << " Файл " << disk_name << " - директория." << endl;
+						if (FileAttributes & FILE_ATTRIBUTE_READONLY)
+							cout << " Файл " << disk_name << " - только для чтения." << endl;
+						if (FileAttributes & FILE_ATTRIBUTE_SYSTEM)
+							cout << " Файл " << disk_name << " - системный." << endl;
+						if (FileAttributes & FILE_ATTRIBUTE_COMPRESSED)
+							cout << " Файл " << disk_name << " - сжатый." << endl;
+						if (FileAttributes & FILE_ATTRIBUTE_HIDDEN)
+							cout << " Файл " << disk_name << " - скрытый." << endl;
+						if (FileAttributes & FILE_ATTRIBUTE_NORMAL)
+							cout << " Таких атрибутов файл " << disk_name << " не имеет.";
+						if (FileAttributes == 0)
+							cout << " Произошла ошибка. Код ошибки: " << GetLastError() << endl;
+					}
+
+					cout << " Старшая часть уникального идентификатора связи с файлом: " << infoFile.nFileIndexHigh << endl;
+					cout << " Порядковый номер тома, который содержит файл: " << infoFile.dwVolumeSerialNumber << endl;
+					cout << " Старшая часть размера файла: " << infoFile.nFileSizeHigh << endl;
+					cout << " Младшая часть размера файла: " << infoFile.nFileSizeLow << endl;
+					cout << " Число связей с этим файлом: " << infoFile.nNumberOfLinks << endl;
+					cout << " Младшая часть уникального идентификатора связи с файлом: " << infoFile.nFileIndexLow << endl;
 				}
+				handleInfo = CloseHandle(handleFile);
+				cout << endl;
 
 				system("pause");
 				break;
+
 			case 4:
 				cout << "Введите имя файла (пример: c:\\folder\\text.pdf): ";
 				cin >> disk_name;
